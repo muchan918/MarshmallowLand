@@ -28,7 +28,7 @@ namespace NorthLand.Core
                 throw new ArgumentException("설정 저장 경로가 비어 있습니다.",nameof(saveRootPath));
             }
 
-            fileStore = new SaveFileStore(saveRootPath,SettingsFileName);
+            fileStore = new SaveFileStore(saveRootPath,SettingsFileName,useEncryption: false);
         }
 
         public bool TrySave(GameSettingsData data,out string error)
