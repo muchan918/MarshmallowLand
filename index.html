@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marshmallow Land — 브라우저에서 플레이</title>
+<style>
+  :root {
+    --bg: #fdf7f2;
+    --panel: #ffffff;
+    --fg: #2b2118;
+    --muted: #7a6a5d;
+    --line: #ead9cb;
+    --link: #c2410c;
+    --accent: #f472b6;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17120f;
+      --panel: #201a16;
+      --fg: #f2e8e0;
+      --muted: #a8968a;
+      --line: #362b24;
+      --link: #fdba74;
+      --accent: #f472b6;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 28px 16px 56px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  }
+
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  header { margin-bottom: 20px; }
+  h1 { font-size: 1.9rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .tagline { color: var(--muted); margin: 0; }
+  .tagline a { color: var(--link); }
+
+  .frame {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+  }
+  .frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+  .cols { display: flex; flex-wrap: wrap; gap: 32px; margin-top: 28px; }
+  .col { flex: 1 1 280px; min-width: 0; }
+
+  h2 {
+    font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted); margin: 0 0 10px; font-weight: 600;
+  }
+
+  table { border-collapse: collapse; width: 100%; }
+  th, td {
+    text-align: left; padding: 7px 0; border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th { color: var(--muted); font-weight: 600; white-space: nowrap; padding-right: 18px; }
+
+  kbd {
+    display: inline-block; padding: 1px 6px; border: 1px solid var(--line);
+    border-bottom-width: 2px; border-radius: 5px; background: var(--panel);
+    font: inherit; font-size: 0.86em; color: var(--fg);
+  }
+
+  .note { color: var(--muted); font-size: 0.92rem; margin: 0 0 12px; }
+  .note strong { color: var(--fg); font-weight: 600; }
+
+  footer {
+    margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 0.9rem;
+  }
+  footer a { color: var(--link); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>🍬 Marshmallow Land</h1>
+    <p class="tagline">
+      낮에는 마을을 키우고, 밤에는 몰려오는 적을 막아내세요 ·
+      <a href="https://github.com/muchan918/MarshmallowLand">GitHub 저장소</a>
+    </p>
+  </header>
+
+  <div class="frame">
+    <iframe src="./game/index.html" title="Marshmallow Land 플레이"
+            allow="autoplay; fullscreen"></iframe>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <h2>조작</h2>
+      <table>
+        <tr><th><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></th><td>카메라 이동</td></tr>
+        <tr><th>우클릭 드래그</th><td>카메라 이동</td></tr>
+        <tr><th>마우스 휠</th><td>확대 / 축소</td></tr>
+        <tr><th><kbd>Q</kbd></th><td>스킬 사용</td></tr>
+        <tr><th><kbd>Space</kbd></th><td>게임 속도 변경</td></tr>
+        <tr><th><kbd>Ctrl</kbd>+<kbd>Z</kbd></th><td>이전 행동 되돌리기</td></tr>
+        <tr><th><kbd>1</kbd>~<kbd>7</kbd></th><td>주요 건물 바로가기</td></tr>
+      </table>
+    </div>
+
+    <div class="col">
+      <h2>알아둘 것</h2>
+      <p class="note">낮에 <strong>주민을 배치해 자원을 모으고</strong> 타워를 세운 뒤,
+        밤에 몰려오는 몬스터를 막습니다.</p>
+      <p class="note"><strong>20웨이브의 보스</strong>를 잡으면 클리어입니다.</p>
+      <p class="note">첫 로딩에 시간이 걸립니다. 잠시 기다려 주세요.</p>
+    </div>
+  </div>
+
+  <footer>
+    <p>세이브 데이터는 이 브라우저에만 저장됩니다. 다른 기기나 시크릿 창에서는 이어서 플레이할 수 없습니다.</p>
+    <p><strong>Chrome을 권장합니다.</strong> 데스크톱 브라우저 기준이며 모바일 터치 조작은 지원하지 않습니다.</p>
+  </footer>
+
+</div>
+</body>
+</html>
