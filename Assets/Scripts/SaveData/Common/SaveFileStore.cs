@@ -52,8 +52,7 @@ namespace NorthLand.Core
                 return StrictUtf8.GetBytes(json);
 
             byte[] encrypted = CryptoUtil.Encrypt(json);
-            byte[] result =
-                new byte[EncryptionHeader.Length + encrypted.Length];
+            byte[] result = new byte[EncryptionHeader.Length + encrypted.Length];
 
             Buffer.BlockCopy(
                 EncryptionHeader, 0,
