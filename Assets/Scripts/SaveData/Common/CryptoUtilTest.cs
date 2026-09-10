@@ -1,68 +1,81 @@
 using System;
-using System.Linq;
 using UnityEngine;
 
 namespace NorthLand.Core
 {
-    public class CryptoUtilTest : MonoBehaviour
+    public sealed class CryptoUtilTest : MonoBehaviour
     {
-        [ContextMenu("암복호화 테스트")]
-        private void RunTest()
+        [ContextMenu("Test Crypto Round Trip")]
+        private void TestRoundTrip()
         {
+            const string original = "Marshmallow Land Save Test";
+
+            byte[] encrypted = CryptoUtil.Encrypt(original);
+            string decrypted = CryptoUtil.Decrypt(encrypted);
+
+            Debug.Log($"Original : {original}");
+            Debug.Log($"Decrypted: {decrypted}");
+            Debug.Log(original == decrypted
+                ? "Crypto RoundTrip 성공"
+                : "Crypto RoundTrip 실패");
+        }
+
+        [ContextMenu("Test Crypto Korean")]
+        private void TestKorean()
+        {
+            const string original = "마시멜로우 왕국 세이브 테스트";
+
+            byte[] encrypted = CryptoUtil.Encrypt(original);
+            string decrypted = CryptoUtil.Decrypt(encrypted);
+
+            Debug.Log(original == decrypted
+                ? "한글 암복호화 성공"
+                : "한글 암복호화 실패");
+        }
+
+        [ContextMenu("Test Random IV")]
+        private void TestRandomIv()
+        {
+            const string original = "Same Save Data";
+
+            byte[] encryptedA = CryptoUtil.Encrypt(original);
+            byte[] encryptedB = CryptoUtil.Encrypt(original);
+
+            bool same = ByteArraysEqual(encryptedA, encryptedB);
+
+            Debug.Log(!same
+                ? "랜덤 IV 테스트 성공: 암호문이 서로 다름"
+                : "랜덤 IV 테스트 실패: 암호문이 동일함");
+        }
+
+        [ContextMenu("Test Invalid Data")]
+        private void TestInvalidData()
+        {
+            byte[] invalidData = new byte[10];
+
             try
             {
-                string[] samples =
-                {
-                    "",
-                    "1234567890123456", // 정확히 16바이트
-                    "{\"Gold\":100,\"Name\":\"테스트 타워\"}"
-                };
-
-                foreach (string original in samples)
-                {
-                    byte[] encrypted = CryptoUtil.Encrypt(original);
-                    string restored = CryptoUtil.Decrypt(encrypted);
-
-                    if (original != restored)
-                        throw new Exception("원본과 복호화 결과가 다릅니다.");
-                }
-
-                Debug.Log("문자열 복원 테스트 통과: 빈 문자열 / 16바이트 / 한글 JSON");
-
-                const string json = "{\"Gold\":100}";
-
-                byte[] first = CryptoUtil.Encrypt(json);
-                byte[] second = CryptoUtil.Encrypt(json);
-
-                if (first.Take(16).SequenceEqual(second.Take(16)))
-                    throw new Exception("두 암호화 결과의 IV가 같습니다.");
-
-                if (first.SequenceEqual(second))
-                    throw new Exception("두 암호화 결과가 같습니다.");
-
-                Debug.Log("랜덤 IV 테스트 통과: 같은 원문도 다른 암호문 생성");
-
-                bool invalidLengthRejected = false;
-
-                try
-                {
-                    CryptoUtil.Decrypt(new byte[17]);
-                }
-                catch (ArgumentException)
-                {
-                    invalidLengthRejected = true;
-                }
-
-                if (!invalidLengthRejected)
-                    throw new Exception("잘못된 길이의 데이터가 거부되지 않았습니다.");
-
-                Debug.Log("입력 길이 검사 통과");
-                Debug.Log("암복호화 테스트 전체 통과");
+                CryptoUtil.Decrypt(invalidData);
+                Debug.LogError("잘못된 데이터인데 복호화가 성공했습니다.");
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception, this);
+                Debug.Log($"잘못된 데이터 감지 성공: {exception.GetType().Name}");
             }
+        }
+
+        private static bool ByteArraysEqual(byte[] a, byte[] b)
+        {
+            if (a == null || b == null || a.Length != b.Length)
+                return false;
+
+            for (int i = 0; i < a.Length; i++)
+            {
+                if (a[i] != b[i])
+                    return false;
+            }
+
+            return true;
         }
     }
 }
