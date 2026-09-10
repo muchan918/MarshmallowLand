@@ -2,7 +2,8 @@
 
 > 이 문서는 플레이어 슬롯, 공통 설정, Run 저장의 파일 구조와 통합 계약을 설명한다.
 > 사용자에게 보이는 정책은 `Docs/GDD.md` §5.9, 시스템 요약과 공개 API는
-> `Docs/Review/SystemMap.md`를 함께 따른다.
+> `Docs/Review/SystemMap.md`를 함께 따른다. `player.json`과 `run-save.json`의 암호화 파일 형식은
+> `Docs/Core/SaveEncryption.md`를 따른다.
 
 ## 1. 개요
 
@@ -145,13 +146,17 @@ Application.persistentDataPath/
 
 ## 6. 파일 IO
 
-`SaveFileStore`가 JSON 문자열의 파일 IO만 담당한다.
+`SaveFileStore`가 JSON 문자열과 파일 바이트 사이의 변환 및 파일 IO를 담당한다.
 
-1. `{SavePath}.tmp`에 UTF-8(BOM 없음)으로 기록한다.
-2. 기록 성공 후 기존 파일을 교체한다.
-3. 실패하면 기존 파일을 유지하고 임시 파일 정리를 시도한다.
+1. `settings.json`은 UTF-8(BOM 없음) 평문으로 인코딩한다.
+2. `player.json`과 `run-save.json`은 `NLSAVE01 + IV + AES 암호문` 형태로 인코딩한다.
+3. 기존 평문 파일은 읽을 수 있으며 다음 정상 저장부터 암호화 형식으로 전환한다.
+4. 완성된 파일 바이트를 `{SavePath}.tmp`에 먼저 기록한다.
+5. 기록 성공 후 기존 파일을 교체한다.
+6. 실패하면 기존 파일을 유지하고 임시 파일 정리를 시도한다.
 
-JSON 변환과 게임 상태 수집은 `SaveFileStore`의 책임이 아니다.
+JSON 직렬화·데이터 버전 처리와 게임 상태 수집은 `SaveFileStore`의 책임이 아니다.
+키 생성, 파일 바이트 구조 및 암호화 형식 변경 규칙은 `Docs/Core/SaveEncryption.md`를 따른다.
 
 ## 7. 버전과 마이그레이션
 
@@ -212,4 +217,6 @@ JSON 변환과 게임 상태 수집은 `SaveFileStore`의 책임이 아니다.
 - [ ] 구버전 루트 Run이 빈 대상 슬롯으로만 이전된다.
 - [ ] 낮 시작 자동 저장과 이어하기 복원이 정상 동작한다.
 - [ ] 게임오버·최종 승리 후 Run 세이브가 삭제된다.
+- [ ] player/Run 파일은 암호화되고 settings 파일은 평문으로 유지된다.
+- [ ] 기존 평문 player/Run 파일이 로드되고 다음 저장부터 암호화 형식으로 전환된다.
 
