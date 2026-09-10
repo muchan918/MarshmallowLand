@@ -14,16 +14,22 @@ namespace NorthLand.Core
     {
         private const string DefaultSaveFileName = "run-save.json";
 
+        private readonly bool useEncryption;
+
+        // 암호화 파일 식별자와 형식 버전.
+        private static readonly byte[] EncryptionHeader = Encoding.ASCII.GetBytes("NLSAVE01");
+
+        private static readonly Encoding StrictUtf8 = new UTF8Encoding(false, true);
+
         public string SavePath { get; }
 
         public bool Exists => File.Exists(SavePath);
 
-        public SaveFileStore(string directoryPath)
-        : this(directoryPath, DefaultSaveFileName)
+        public SaveFileStore(string directoryPath) : this(directoryPath, DefaultSaveFileName, true)
         {
         }
 
-        public SaveFileStore(string directoryPath,string saveFileName)
+        public SaveFileStore(string directoryPath,string saveFileName,bool useEncryption = true)
         {
             if (string.IsNullOrWhiteSpace(directoryPath))
             {
@@ -35,7 +41,78 @@ namespace NorthLand.Core
                 throw new ArgumentException("세이브 파일 이름이 비어 있습니다.",nameof(saveFileName));
             }
 
-            SavePath = Path.Combine(directoryPath,saveFileName);
+            SavePath = Path.Combine(directoryPath, saveFileName);
+            this.useEncryption = useEncryption;
+        }
+        
+
+        private byte[] EncodeFile(string json)
+        {
+            if (!useEncryption)
+                return StrictUtf8.GetBytes(json);
+
+            byte[] encrypted = CryptoUtil.Encrypt(json);
+            byte[] result = new byte[EncryptionHeader.Length + encrypted.Length];
+
+            Buffer.BlockCopy(
+                EncryptionHeader, 0,
+                result, 0,
+                EncryptionHeader.Length);
+
+            Buffer.BlockCopy(
+                encrypted, 0,
+                result, EncryptionHeader.Length,
+                encrypted.Length);
+
+            return result;
+        }
+
+        private string DecodeFile(byte[] bytes)
+        {
+            if (HasEncryptionHeader(bytes))
+            {
+                int encryptedLength = bytes.Length - EncryptionHeader.Length;
+                byte[] encrypted = new byte[encryptedLength];
+
+                Buffer.BlockCopy(bytes, EncryptionHeader.Length,encrypted, 0,encryptedLength);
+
+                // 복호화 실패 시 예외를 전달한다.
+                // 실패한 암호문을 평문으로 재해석하지 않는다.
+                return CryptoUtil.Decrypt(encrypted);
+            }
+
+            // 기존 UTF-8 평문 파일의 BOM을 허용한다.
+            int offset = 0;
+
+            if (bytes.Length >= 3 &&bytes[0] == 0xEF &&bytes[1] == 0xBB &&bytes[2] == 0xBF)
+            {
+                offset = 3;
+            }
+
+            string json = StrictUtf8.GetString(bytes, offset, bytes.Length - offset);
+
+            // 이 프로젝트의 기존 세이브는 JSON 객체 형식이다.
+            if (!json.TrimStart().StartsWith("{", StringComparison.Ordinal))
+            {
+                throw new FormatException("지원하지 않는 세이브 파일 형식입니다.");
+            }
+
+            // 실제 JSON 파싱·버전 검증은 기존 Serializer가 담당한다.
+            return json;
+        }
+
+        private static bool HasEncryptionHeader(byte[] bytes)
+        {
+            if (bytes.Length < EncryptionHeader.Length)
+                return false;
+
+            for (int i = 0; i < EncryptionHeader.Length; i++)
+            {
+                if (bytes[i] != EncryptionHeader[i])
+                    return false;
+            }
+
+            return true;
         }
 
 
@@ -56,7 +133,8 @@ namespace NorthLand.Core
 
             try
             {
-                json = File.ReadAllText(SavePath);
+                byte[] bytes = File.ReadAllBytes(SavePath);
+                json = DecodeFile(bytes);
                 return true;
             }
             catch (Exception exception)
@@ -86,9 +164,10 @@ namespace NorthLand.Core
 
             try
             {
-                Directory.CreateDirectory(directoryPath);
+                byte[] bytes = EncodeFile(json);
 
-                File.WriteAllText(temporaryPath,json,new UTF8Encoding(false));
+                Directory.CreateDirectory(directoryPath);
+                File.WriteAllBytes(temporaryPath, bytes);
 
                 if (File.Exists(SavePath))
                 {
